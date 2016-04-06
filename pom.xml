@@ -47,6 +47,13 @@
 		</license>
 	</licenses>
 
+	<repositories>
+		<repository>
+			<id>bintray-bds-integration</id>
+			<url>http://dl.bintray.com/bds/integration/</url>
+		</repository>
+	</repositories>
+
 	<distributionManagement>
 		<repository>
 			<id>bds-artifactory</id>
@@ -85,7 +92,7 @@
 		<dependency>
 			<groupId>com.blackducksoftware.integration</groupId>
 			<artifactId>build-info-common</artifactId>
-			<version>${project.version}</version>
+			<version>2.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
