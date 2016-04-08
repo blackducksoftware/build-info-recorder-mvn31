@@ -56,12 +56,12 @@
 
 	<distributionManagement>
 		<repository>
-			<id>bds-artifactory</id>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/integration</url>
+			<id>bds-int-public</id>
+			<url>https://updates.suite.blackducksoftware.com/bdosvr/</url>
 		</repository>
 		<snapshotRepository>
-			<id>artifactory.blackducksoftware.com</id>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/integration-snapshot</url>
+			<id>bds-int-public</id>
+			<url>https://updates.suite.blackducksoftware.com/bdosvr/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
