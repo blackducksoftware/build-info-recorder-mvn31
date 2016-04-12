@@ -57,11 +57,11 @@
 	<distributionManagement>
 		<repository>
 			<id>bds-int-public</id>
-			<url>https://updates.suite.blackducksoftware.com/bdosvr/</url>
+			<url>https://updates.suite.blackducksoftware.com/integrations/</url>
 		</repository>
 		<snapshotRepository>
 			<id>bds-int-public</id>
-			<url>https://updates.suite.blackducksoftware.com/bdosvr/</url>
+			<url>https://updates.suite.blackducksoftware.com/integrations/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
