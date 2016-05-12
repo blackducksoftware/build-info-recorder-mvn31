@@ -1,2 +1,14 @@
 language: java
-install: mvn package
+notifications:
+  email:
+    recipients:
+      - akamen@blackducksoftware.com
+      - jrichard@blackducksoftware.com
+      - psantos@blackducksoftware.com
+      - ekerwin@blackducksoftware.com
+
+install: true
+script:
+  - mvn package
+after_success:
+  - mvn test jacoco:report coveralls:report

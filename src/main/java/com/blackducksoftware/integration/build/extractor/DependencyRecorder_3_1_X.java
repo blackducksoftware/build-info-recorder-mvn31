@@ -19,10 +19,11 @@
 package com.blackducksoftware.integration.build.extractor;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.eventspy.AbstractEventSpy;
@@ -110,28 +111,28 @@ public class DependencyRecorder_3_1_X extends AbstractEventSpy {
 		final List<Dependency> dependencies = event.getDependencies();
 		logger.debug("onEvent(DependencyResolutionResult): " + event.getClass().getName() + "::" + event);
 		logger.debug("Dependencies #: " + dependencies.size());
-		final List<BuildDependency> projectDependencies = new ArrayList<BuildDependency>();
+		final Set<BuildDependency> projectDependencies = new HashSet<BuildDependency>();
 		for (final Dependency d : dependencies) {
 			final BuildDependency currentDependency = new BuildDependency();
 			final Artifact artifact = d.getArtifact();
 			currentDependency.setGroup(artifact.getGroupId());
 			currentDependency.setArtifact(artifact.getArtifactId());
 			currentDependency.setVersion(artifact.getVersion());
-			final ArrayList<String> scopes = new ArrayList<String>();
+			final Set<String> scopes = new HashSet<String>();
 			scopes.add(d.getScope());
-			currentDependency.setScope(scopes);
+			currentDependency.setScopes(scopes);
 			currentDependency.setClassifier(artifact.getClassifier());
 			currentDependency.setExtension(artifact.getExtension());
 			projectDependencies.add(currentDependency);
 		}
-		buildInfo.addDependencies(projectDependencies);
+		buildInfo.setDependencies(projectDependencies);
 	}
 
 	public void onEvent(final ExecutionEvent event) throws Exception {
 		logger.debug("onEvent(ExecutionEvent): " + event.getClass().getName() + "::" + event);
 		final MavenProject project = event.getProject();
 		if (project != null) {
-			buildInfo.addArtifact(createBuildArtifact(project));
+			buildInfo.setBuildArtifact(createBuildArtifact(project));
 		}
 	}
 
@@ -141,7 +142,6 @@ public class DependencyRecorder_3_1_X extends AbstractEventSpy {
 		artifact.setGroup(pom.getGroupId());
 		artifact.setArtifact(pom.getArtifactId());
 		artifact.setVersion(pom.getVersion());
-		artifact.setId(pom.getId());
 		return artifact;
 	}
 
