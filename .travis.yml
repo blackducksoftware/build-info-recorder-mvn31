@@ -1,4 +1,9 @@
 language: java
+
+cache:
+  directories:
+    - $HOME/.m2
+
 notifications:
   email:
     recipients:
@@ -9,6 +14,6 @@ notifications:
 
 install: true
 script:
-  - mvn package
+  - mvn clean package
 after_success:
   - mvn test jacoco:report coveralls:report

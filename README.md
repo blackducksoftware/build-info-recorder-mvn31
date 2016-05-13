@@ -4,6 +4,7 @@ The build-info-recorder-mvn31 library is used to manage injecting the recording 
 ## Build ##
 
 [![Build Status](https://travis-ci.org/blackducksoftware/build-info-recorder-mvn31.svg?branch=master)](https://travis-ci.org/blackducksoftware/build-info-recorder-mvn31)
+[![Coverage Status](https://coveralls.io/repos/github/blackducksoftware/build-info-recorder-mvn31/badge.svg?branch=master)](https://coveralls.io/github/blackducksoftware/build-info-recorder-mvn31?branch=master)
 
 ## Where can I get the latest release? ##
 You can download the latest source from GitHub: https://github.com/blackducksoftware/build-info-recorder-mvn31. 
