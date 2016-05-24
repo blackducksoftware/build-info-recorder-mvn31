@@ -1,6 +1,6 @@
-/.settings
-/.classpath
-/target
-/.project
-/bin
-/.DS_Store
+.settings/
+.classpath
+.project
+target/
+.DS_Store
+pom.xml.bak
