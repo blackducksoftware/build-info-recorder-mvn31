@@ -55,9 +55,6 @@ import com.blackducksoftware.integration.build.bdio.MavenIdCreator;
 
 @Component(role = EventSpy.class, isolatedRealm = true, description = "Build Info Recorder")
 public class DependencyRecorder_3_1_X extends AbstractEventSpy {
-	private static final String TARGET = "target";
-	private static final String BDIO_FILE_SUFFIX = "_bdio.json";
-
 	private Logger logger;
 	private String buildId;
 	private String workingDirectory;
@@ -120,8 +117,8 @@ public class DependencyRecorder_3_1_X extends AbstractEventSpy {
 		final BuildInfo buildInfo = new BuildInfo();
 		buildInfo.setBuildArtifact(buildArtifact);
 
-		final Set<BuildDependency> projectDependencies = new HashSet<BuildDependency>();
 		logger.debug("Dependencies #: " + dependencies.size());
+		final Set<BuildDependency> projectDependencies = new HashSet<BuildDependency>();
 		for (final Dependency d : dependencies) {
 			final BuildDependency currentDependency = new BuildDependency();
 			final Artifact artifact = d.getArtifact();
@@ -155,8 +152,8 @@ public class DependencyRecorder_3_1_X extends AbstractEventSpy {
 		final Gav projectGav = new Gav(project.getGroupId(), project.getArtifactId(), project.getVersion());
 
 		File file = new File(workingDirectory);
-		file = new File(file, TARGET);
-		file = new File(file, projectGav.getArtifactId() + BDIO_FILE_SUFFIX);
+		file = new File(file, Recorder_3_1_Loader.TARGET);
+		file = new File(file, projectGav.getArtifactId() + Recorder_3_1_Loader.BDIO_FILE_SUFFIX);
 
 		try (final OutputStream outputStream = new FileOutputStream(file)) {
 			final com.blackducksoftware.integration.build.bdio.DependencyNode root = createCommonDependencyNode(

@@ -26,8 +26,10 @@ public class Recorder_3_1_Loader {
 	// Holds all the static string variables
 	public static final String MAVEN_TYPE = "org.apache.maven";
 	public static final String PROPERTY_WORKING_DIRECTORY = "workingDirectory";
+	public static final String TARGET = "target";
 	public static final String PROPERTY_BUILD_ID = "BuildId";
 	public static final String CONTEXT_USER_PROPERTIES = "userProperties";
 	public static final String CONTEXT_SYSTEM_PROPERTIES = "systemProperties";
+	public static final String BDIO_FILE_SUFFIX = "_bdio.json";
 
 }
