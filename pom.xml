@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.blackducksoftware.integration</groupId>
     <artifactId>common-maven-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <relativePath>../common-maven-parent</relativePath>
   </parent>
 
@@ -16,11 +16,6 @@
   <name>Build Info Recorder for Maven 3.1</name>
   <description>Record the Build information (artifact and dependencies) of a Maven 3.1 build.</description>
   <inceptionYear>2014</inceptionYear>
-
-  <properties>
-    <source.java.version>1.6</source.java.version>
-    <target.java.version>1.6</target.java.version>
-  </properties>
 
   <repositories>
     <!-- ekerwin(2016-05-24): this is included only to acquire the parent pom, where this information is sadly duplicated. -->
@@ -66,12 +61,6 @@
       <artifactId>slf4j-api</artifactId>
       <version>1.7.5</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.10</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 

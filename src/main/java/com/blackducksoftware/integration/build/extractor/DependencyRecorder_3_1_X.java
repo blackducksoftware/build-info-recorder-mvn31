@@ -22,9 +22,13 @@
 package com.blackducksoftware.integration.build.extractor;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -37,82 +41,82 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.annotations.Component;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.blackducksoftware.integration.build.BuildArtifact;
 import com.blackducksoftware.integration.build.BuildDependency;
 import com.blackducksoftware.integration.build.BuildInfo;
+import com.blackducksoftware.integration.build.bdio.BdioConverter;
+import com.blackducksoftware.integration.build.bdio.CommonBomFormatter;
+import com.blackducksoftware.integration.build.bdio.Gav;
+import com.blackducksoftware.integration.build.bdio.MavenIdCreator;
 
 @Component(role = EventSpy.class, isolatedRealm = true, description = "Build Info Recorder")
 public class DependencyRecorder_3_1_X extends AbstractEventSpy {
 	private Logger logger;
-	private BuildInfo buildInfo = null;
-	private String workingDirectory = null;
+	private String buildId;
+	private String workingDirectory;
+	private MavenProject project;
+	private List<Dependency> dependencies;
+	private DependencyNode rootMavenDependencyNode;
 
 	@Override
 	public void init(final Context context) throws Exception {
 		logger = LoggerFactory.getLogger(DependencyRecorder_3_1_X.class);
 		logger.info("Dependency Recorder for Maven 3.1");
-		logger.debug("Context: ");
-		String buildId = null;
-		for (final Entry<String, Object> e : context.getData().entrySet()) {
-			logger.debug("  " + e.getKey() + ": " + e.getValue());
-			if (Recorder_3_1_Loader.CONTEXT_USER_PROPERTIES.equals(e.getKey())) {
-				final Properties properties = (Properties) e.getValue();
-				if (properties.getProperty(Recorder_3_1_Loader.PROPERTY_BUILD_ID) != null
-						&& StringUtils.isEmpty(buildId)) {
-					buildId = properties.getProperty(Recorder_3_1_Loader.PROPERTY_BUILD_ID);
-					logger.info(Recorder_3_1_Loader.PROPERTY_BUILD_ID + ": " + buildId);
-				}
-			} else if (Recorder_3_1_Loader.PROPERTY_WORKING_DIRECTORY.equals(e.getKey())) {
-				workingDirectory = (String) e.getValue();
-				logger.info(Recorder_3_1_Loader.PROPERTY_WORKING_DIRECTORY + ": " + workingDirectory);
-			} else if (Recorder_3_1_Loader.CONTEXT_SYSTEM_PROPERTIES.equals(e.getKey())) {
-				final Properties properties = (Properties) e.getValue();
-				if (properties.getProperty(Recorder_3_1_Loader.PROPERTY_BUILD_ID) != null
-						&& StringUtils.isEmpty(buildId)) {
-					buildId = properties.getProperty(Recorder_3_1_Loader.PROPERTY_BUILD_ID);
-					logger.info(Recorder_3_1_Loader.PROPERTY_BUILD_ID + ": " + buildId);
-				}
-			}
+
+		final Map<String, Object> data = context.getData();
+		final Properties contextUserProperties = (Properties) data.get(Recorder_3_1_Loader.CONTEXT_USER_PROPERTIES);
+		final Properties contextSystemProperties = (Properties) data.get(Recorder_3_1_Loader.CONTEXT_SYSTEM_PROPERTIES);
+
+		buildId = contextUserProperties.getProperty(Recorder_3_1_Loader.PROPERTY_BUILD_ID);
+		if (StringUtils.isEmpty(buildId)) {
+			buildId = contextSystemProperties.getProperty(Recorder_3_1_Loader.PROPERTY_BUILD_ID);
 		}
+
 		if (StringUtils.isEmpty(buildId)) {
 			logger.info("Could not find the property : " + Recorder_3_1_Loader.PROPERTY_BUILD_ID);
+		} else {
+			logger.info(Recorder_3_1_Loader.PROPERTY_BUILD_ID + ": " + buildId);
 		}
-		buildInfo = new BuildInfo();
-		buildInfo.setBuildId(buildId);
+
+		workingDirectory = (String) data.get(Recorder_3_1_Loader.PROPERTY_WORKING_DIRECTORY);
+		logger.info(Recorder_3_1_Loader.PROPERTY_WORKING_DIRECTORY + ": " + workingDirectory);
+
 		super.init(context);
 	}
 
 	@Override
 	public void close() throws Exception {
-		logger.info("Dependency Recorder: write " + workingDirectory + File.separator + BuildInfo.OUTPUT_FILE_NAME);
-		buildInfo.close(new File(workingDirectory));
+		handleBdioOutput();
+		handleBuildInfoOutput();
+
 		super.close();
 	}
 
 	@Override
 	public void onEvent(final Object event) throws Exception {
+		logger.debug("onEvent: " + event.getClass().getName() + "::" + event);
 		if (event instanceof DependencyResolutionResult) {
-			onEvent((DependencyResolutionResult) event);
+			rootMavenDependencyNode = ((DependencyResolutionResult) event).getDependencyGraph();
+			dependencies = ((DependencyResolutionResult) event).getDependencies();
 		} else if (event instanceof ExecutionEvent) {
-			onEvent((ExecutionEvent) event);
+			final MavenProject eventProject = ((ExecutionEvent) event).getProject();
+			if (null != eventProject) {
+				project = eventProject;
+			}
 		}
 	}
 
-	/**
-	 * When a DependencyResolutionResult event occurs during the build, the
-	 * event dependencies are recorded to the build-info.json file using Json
-	 *
-	 * @param event
-	 *            DependencyResolutionResult a dependency resolution event
-	 *
-	 * @throws Exception
-	 */
-	public void onEvent(final DependencyResolutionResult event) throws Exception {
-		final List<Dependency> dependencies = event.getDependencies();
-		logger.debug("onEvent(DependencyResolutionResult): " + event.getClass().getName() + "::" + event);
+	private void handleBuildInfoOutput() throws IOException {
+		logger.info("creating build-info output");
+		final BuildArtifact buildArtifact = createBuildArtifact();
+
+		final BuildInfo buildInfo = new BuildInfo();
+		buildInfo.setBuildArtifact(buildArtifact);
+
 		logger.debug("Dependencies #: " + dependencies.size());
 		final Set<BuildDependency> projectDependencies = new HashSet<BuildDependency>();
 		for (final Dependency d : dependencies) {
@@ -129,23 +133,51 @@ public class DependencyRecorder_3_1_X extends AbstractEventSpy {
 			projectDependencies.add(currentDependency);
 		}
 		buildInfo.setDependencies(projectDependencies);
+
+		logger.info("Dependency Recorder: write " + workingDirectory + File.separator + BuildInfo.OUTPUT_FILE_NAME);
+		buildInfo.close(new File(workingDirectory));
 	}
 
-	public void onEvent(final ExecutionEvent event) throws Exception {
-		logger.debug("onEvent(ExecutionEvent): " + event.getClass().getName() + "::" + event);
-		final MavenProject project = event.getProject();
-		if (project != null) {
-			buildInfo.setBuildArtifact(createBuildArtifact(project));
+	private BuildArtifact createBuildArtifact() {
+		final BuildArtifact artifact = new BuildArtifact();
+		artifact.setType(Recorder_3_1_Loader.MAVEN_TYPE);
+		artifact.setGroup(project.getGroupId());
+		artifact.setArtifact(project.getArtifactId());
+		artifact.setVersion(project.getVersion());
+		return artifact;
+	}
+
+	private void handleBdioOutput() throws IOException {
+		logger.info("creating bdio output");
+		final Gav projectGav = new Gav(project.getGroupId(), project.getArtifactId(), project.getVersion());
+
+		File file = new File(workingDirectory);
+		file = new File(file, Recorder_3_1_Loader.TARGET);
+		file = new File(file, projectGav.getArtifactId() + Recorder_3_1_Loader.BDIO_FILE_SUFFIX);
+
+		try (final OutputStream outputStream = new FileOutputStream(file)) {
+			final com.blackducksoftware.integration.build.bdio.DependencyNode root = createCommonDependencyNode(
+					rootMavenDependencyNode);
+			final MavenIdCreator mavenIdCreator = new MavenIdCreator();
+			final BdioConverter bdioConverter = new BdioConverter(mavenIdCreator);
+			final CommonBomFormatter commonBomFormatter = new CommonBomFormatter(bdioConverter);
+			commonBomFormatter.writeProject(outputStream, project.getName(), root);
+			logger.info("Created Black Duck I/O json: " + file.getAbsolutePath());
 		}
 	}
 
-	private BuildArtifact createBuildArtifact(final MavenProject pom) {
-		final BuildArtifact artifact = new BuildArtifact();
-		artifact.setType(Recorder_3_1_Loader.MAVEN_TYPE);
-		artifact.setGroup(pom.getGroupId());
-		artifact.setArtifact(pom.getArtifactId());
-		artifact.setVersion(pom.getVersion());
-		return artifact;
+	private com.blackducksoftware.integration.build.bdio.DependencyNode createCommonDependencyNode(
+			final DependencyNode mavenDependencyNode) {
+		final String groupId = mavenDependencyNode.getArtifact().getGroupId();
+		final String artifactId = mavenDependencyNode.getArtifact().getArtifactId();
+		final String version = mavenDependencyNode.getArtifact().getVersion();
+		final Gav gav = new Gav(groupId, artifactId, version);
+		final List<com.blackducksoftware.integration.build.bdio.DependencyNode> children = new ArrayList<>();
+		for (final DependencyNode child : mavenDependencyNode.getChildren()) {
+			children.add(createCommonDependencyNode(child));
+		}
+
+		return new com.blackducksoftware.integration.build.bdio.DependencyNode(gav, children);
 	}
 
 }
