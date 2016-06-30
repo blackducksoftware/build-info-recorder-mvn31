@@ -1,3 +1,6 @@
+## Deprecated ##
+This project has been deprecated and will no longer be maintained. Similar functionality is available using the [hub-maven-plugin](https://github.com/blackducksoftware/hub-maven-plugin).
+
 ## Overview ##
 The build-info-recorder-mvn31 library is used to manage injecting the recording process in to your maven build process if your actual maven install is 3.1 or later. Using the [AbstractEventSpy](https://maven.apache.org/ref/3.1.1/maven-core/apidocs/org/apache/maven/eventspy/AbstractEventSpy.html) provided by maven, it is possible to register the recorders to automatically gather data on you maven build process as it runs.
 
